@@ -1,0 +1,8 @@
+# Convert line endings to LF (Unix-style) on checkout for filetypes used in the project.
+.sum text eol=lf
+.mod text eol=lf
+.go text eol=lf
+.py text eol=lf
+.yaml text eol=lf
+.sh text eol=lf
+.md text eol=lf
