@@ -2,49 +2,58 @@ package form3
 
 import (
 	"mkuznets.com/go/form3/accounts"
-	"mkuznets.com/go/form3/client"
+	"mkuznets.com/go/form3/api"
 )
 
 const (
-	DefaultApiUrl = "https://api.form3.tech"
+	DefaultBaseUrl = "https://api.form3.tech"
 )
 
-type Form3 struct {
-	Client         *client.Client
-	OrganisationId string
+// Client is the Form3 API client.
+type Client struct {
+	Api *api.Api
+	// Accounts is the Form3 API client for /v1/organisation/accounts endpoints.
+	Accounts *accounts.Client
 
-	Accounts *accounts.Service
+	baseUrl        string
+	organisationId string
 }
 
-func New(opts ...Option) (*Form3, error) {
-	s := &Form3{}
+func New(opts ...Option) (*Client, error) {
+	s := &Client{
+		baseUrl: DefaultBaseUrl,
+	}
 	for _, opt := range opts {
 		opt(s)
 	}
 
-	if s.Client == nil {
-		c, err := client.NewClient(DefaultApiUrl)
+	if s.Api == nil {
+		c, err := api.New(s.baseUrl, s.organisationId)
 		if err != nil {
 			return nil, err
 		}
-		s.Client = c
+		s.Api = c
 	}
 
-	s.Accounts = accounts.NewService(s.Client, s.OrganisationId)
+	s.Accounts = &accounts.Client{A: s.Api}
 
 	return s, nil
 }
 
-type Option = func(service *Form3)
+type Option = func(service *Client)
 
-func WithClient(v *client.Client) Option {
-	return func(f *Form3) {
-		f.Client = v
+func WithBaseUrl(v string) Option {
+	return func(f *Client) {
+		f.baseUrl = v
 	}
 }
 
 func WithOrganisationId(v string) Option {
-	return func(f *Form3) {
-		f.OrganisationId = v
+	return func(f *Client) {
+		f.organisationId = v
 	}
+}
+
+func String(v string) *string {
+	return &v
 }
