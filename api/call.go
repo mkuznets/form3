@@ -47,14 +47,3 @@ func (c *Call) httpRequest(ctx context.Context, baseURL *url.URL) (*http.Request
 
 	return req, nil
 }
-
-// NewCall creates a new Call for the given API endpoint.
-func NewCall(method, path string, requestResource any, responseResource any) *Call {
-	c := &Call{
-		Method:   method,
-		Path:     path,
-		Request:  requestResource,
-		Response: responseResource,
-	}
-	return c
-}
