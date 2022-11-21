@@ -4,12 +4,13 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"github.com/google/uuid"
 	"io"
-	"mkuznets.com/go/form3/models"
 	"net/http"
 	"net/url"
 	"time"
+
+	"github.com/google/uuid"
+	"mkuznets.com/go/form3/models"
 )
 
 // Api manages requests and responses from the Form3 API endpoints.

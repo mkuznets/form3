@@ -1,10 +1,11 @@
 package api_test
 
 import (
-	"github.com/stretchr/testify/assert"
-	"mkuznets.com/go/form3/api"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
+	"mkuznets.com/go/form3/api"
 )
 
 func TestDefaultBackOffProvider_IncresingDelayAndReset(t *testing.T) {

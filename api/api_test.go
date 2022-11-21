@@ -2,13 +2,14 @@ package api_test
 
 import (
 	"context"
-	"github.com/stretchr/testify/assert"
 	"io"
-	"mkuznets.com/go/form3/api"
-	"mkuznets.com/go/form3/testutils"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"mkuznets.com/go/form3/api"
+	"mkuznets.com/go/form3/testutils"
 )
 
 func TestApi_New(t *testing.T) {

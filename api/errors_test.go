@@ -1,9 +1,10 @@
 package api_test
 
 import (
+	"testing"
+
 	"github.com/stretchr/testify/assert"
 	"mkuznets.com/go/form3/api"
-	"testing"
 )
 
 func TestError_Error(t *testing.T) {

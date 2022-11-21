@@ -4,9 +4,10 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"mkuznets.com/go/form3/models"
 	"net/http"
 	"net/url"
+
+	"mkuznets.com/go/form3/models"
 )
 
 // Call represents a single Form3 API endpoint invocation and its response.

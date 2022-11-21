@@ -1,8 +1,9 @@
 package api
 
 import (
-	"github.com/cenkalti/backoff/v4"
 	"time"
+
+	"github.com/cenkalti/backoff/v4"
 )
 
 const (
