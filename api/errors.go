@@ -49,7 +49,7 @@ func (e Error) code() string {
 	} else if e.ResponseErrorCode != "" {
 		return e.ResponseErrorCode
 	} else if e.StatusCode != 0 {
-		return fmt.Sprintf("HTTP %d (%s)", e.StatusCode, http.StatusText(e.StatusCode))
+		return fmt.Sprintf("HTTP %d", e.StatusCode)
 	}
 	return ""
 }
@@ -62,7 +62,7 @@ func (e Error) message() string {
 	} else if e.StatusCode != 0 {
 		return http.StatusText(e.StatusCode)
 	}
-	return ""
+	return "Unrecognised error"
 }
 
 func (e Error) Error() string {

@@ -3,7 +3,7 @@ package api
 import (
 	"context"
 	"encoding/json"
-	"fmt"
+	"errors"
 	"github.com/google/uuid"
 	"io"
 	"mkuznets.com/go/form3/models"
@@ -75,7 +75,7 @@ func (s *Api) Do(ctx context.Context, call *Call) error {
 func (s *Api) withRetries(handler func() (*http.Response, error)) (*http.Response, error) {
 	backOff := s.BackOffProvider()
 	if backOff == nil {
-		return nil, fmt.Errorf("BackOffProvider returned nil")
+		return nil, errors.New("backoff provider returned nil")
 	}
 
 	for {
@@ -123,9 +123,6 @@ func shouldRetry(err error) bool {
 }
 
 func drainBody(resp *http.Response) {
-	if resp == nil {
-		return
-	}
 	defer resp.Body.Close()
 	_, _ = io.Copy(io.Discard, resp.Body)
 }
