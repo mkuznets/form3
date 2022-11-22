@@ -9,7 +9,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"mkuznets.com/go/form3/api"
-	"mkuznets.com/go/form3/testutils"
+	"mkuznets.com/go/form3/internal/testutils"
 )
 
 func TestApi_New(t *testing.T) {
