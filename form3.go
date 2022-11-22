@@ -49,7 +49,3 @@ func New() *Client {
 
 	return client
 }
-
-func String(v string) *string {
-	return &v
-}

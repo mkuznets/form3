@@ -19,16 +19,6 @@ func testBackOff(maxRetries int) func() form3.BackOff {
 }
 
 func TestApi_Do(t *testing.T) {
-
-	t.Run("base URL error", func(t *testing.T) {
-		api := form3.New().SetBaseUrl("__:__").Api()
-		err := api.Do(context.Background(), &form3.Call{
-			Method: "GET",
-			Path:   "/v1/resource",
-		})
-		assert.ErrorContains(t, err, "first path segment in URL cannot contain colon")
-	})
-
 	t.Run("GET", func(t *testing.T) {
 		mux := http.NewServeMux()
 		mux.HandleFunc("/v1/resource", func(w http.ResponseWriter, r *http.Request) {
@@ -126,6 +116,33 @@ func TestApi_Do(t *testing.T) {
 		assert.NoError(t, err)
 	})
 
+	t.Run("invalid base URL", func(t *testing.T) {
+		api := form3.New().SetBaseUrl("__:__").Api()
+		err := api.Do(context.Background(), &form3.Call{
+			Method: "GET",
+			Path:   "/v1/resource",
+		})
+		assert.ErrorContains(t, err, "first path segment in URL cannot contain colon")
+	})
+
+	t.Run("invalid path", func(t *testing.T) {
+		api := form3.New().SetBaseUrl("127.0.0.1").Api()
+		err := api.Do(context.Background(), &form3.Call{
+			Method: "GET",
+			Path:   "://foo.bar",
+		})
+		assert.ErrorContains(t, err, "missing protocol scheme")
+	})
+
+	t.Run("invalid request type", func(t *testing.T) {
+		api := form3.New().SetBaseUrl("127.0.0.1").Api()
+		err := api.Do(context.Background(), &form3.Call{
+			Method:  "GET",
+			Path:    "/v1/resource",
+			Request: func() {},
+		})
+		assert.ErrorContains(t, err, "json: unsupported type")
+	})
 }
 
 func failingHandlerMock(failureCount int, failureCode int) *testutils.HandlerMock {

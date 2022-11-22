@@ -1,9 +1,10 @@
 package form3
 
+//go:generate moq -out api_mock_test.go . Api
+
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"io"
 	"net/http"
 	"net/url"
@@ -56,12 +57,7 @@ func (a *api) Do(ctx context.Context, call *Call) error {
 }
 
 func (a *api) withRetries(handler func() (*http.Response, error)) (*http.Response, error) {
-	backOff := a.c.backOffProvider()
-	if backOff == nil {
-		return nil, errors.New("backoff provider returned nil")
-	}
-
-	for {
+	for backOff := a.c.backOffProvider(); ; {
 		resp, err := handler()
 		if err != nil && shouldRetry(err) {
 			delay := backOff.NextBackOff()
@@ -77,7 +73,7 @@ func (a *api) withRetries(handler func() (*http.Response, error)) (*http.Respons
 }
 
 func errorFromResponse(resp *http.Response) error {
-	if resp.StatusCode == http.StatusOK || resp.StatusCode == http.StatusCreated {
+	if resp.StatusCode/100 == 2 {
 		return nil
 	}
 	defer drainBody(resp)

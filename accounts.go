@@ -3,6 +3,7 @@ package form3
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"strconv"
 
 	"mkuznets.com/go/form3/models"
@@ -65,8 +66,9 @@ func (s *accountsClient) Fetch(ctx context.Context, accountId string) (*models.A
 
 func (s *accountsClient) Delete(ctx context.Context, accountId string, accountVersion int) error {
 	call := &Call{
-		Method: "DELETE",
-		Path:   fmt.Sprintf("/v1/organisation/accounts/%s", accountId),
+		Method:      "DELETE",
+		Path:        fmt.Sprintf("/v1/organisation/accounts/%s", accountId),
+		QueryParams: url.Values{},
 	}
 	call.QueryParams.Add("version", strconv.Itoa(accountVersion))
 	return s.c.Api().Do(ctx, call)

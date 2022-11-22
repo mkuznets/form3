@@ -2,63 +2,25 @@ package form3_test
 
 import (
 	"context"
-	"fmt"
 	"testing"
 
-	"github.com/google/uuid"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"mkuznets.com/go/form3"
-	"mkuznets.com/go/form3/models"
+	"mkuznets.com/go/form3/internal/testutils"
 )
 
-func SetupIntegration(t *testing.T) {
-	if testing.Short() {
-		t.Skip("Skipping integration test")
-	}
-}
+func TestIntegration_Client_Api(t *testing.T) {
+	testutils.EnsureIntegration(t)
 
-func TestIntegrationService(t *testing.T) {
-	SetupIntegration(t)
-
-	v := uuid.NewString()
-
-	srv := form3.New().
-		SetOrganisationId(uuid.NewString()).
-		SetBaseUrl("http://127.0.0.1:8080").
-		SetUuidProvider(func() string {
-			return v
+	t.Run("invalid endpoint", func(t *testing.T) {
+		api := newClient("").Api()
+		err := api.Do(context.Background(), &form3.Call{
+			Method: "GET",
+			Path:   "/v1/random",
 		})
-
-	r, err := srv.Accounts().Create(context.Background(), &models.AccountAttributes{
-		AccountNumber: "21751823",
-		BankID:        "200401",
-		BankIDCode:    models.BankIDCodeGB,
-		BaseCurrency:  models.CurrencyGBP,
-		Bic:           "BARCGB22",
-		Country:       form3.String(models.CountryGB),
-		Iban:          "GB34BARC20040121751823",
-		Name:          []string{"Max Kuznetsov"},
+		require.ErrorAs(t, err, &form3.Error{})
+		assert.ErrorContains(t, err, "404")
 	})
-	if err != nil {
-		panic(err)
-	}
-	fmt.Println(r)
-
-	srv.SetOrganisationId(uuid.NewString())
-
-	r, err = srv.Accounts().Create(context.Background(), &models.AccountAttributes{
-		AccountNumber: "21751823",
-		BankID:        "200401",
-		BankIDCode:    models.BankIDCodeGB,
-		BaseCurrency:  models.CurrencyGBP,
-		Bic:           "BARCGB22",
-		Country:       form3.String(models.CountryGB),
-		Iban:          "GB34BARC20040121751823",
-		Name:          []string{"Max Kuznetsov"},
-	})
-	if err != nil {
-		panic(err)
-	}
-
-	fmt.Println(r)
 
 }
