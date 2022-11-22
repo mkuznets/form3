@@ -35,6 +35,18 @@ services:
     volumes:
       - ./scripts/db:/docker-entrypoint-initdb.d/
 
+  form3_client_tests:
+    image: golang:1.19.3-alpine3.16
+    depends_on:
+      - accountapi
+    environment:
+      - FORM3_API_BASE_URL=http://accountapi:8080
+      - CGO_ENABLED=0
+    volumes:
+      - ./.:/form3
+    working_dir: /form3
+    command: "go test -cover -v ./..."
+
   vault:
     image: vault:1.6.3
     environment:
