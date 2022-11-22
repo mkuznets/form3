@@ -29,10 +29,4 @@ func ExampleNew() {
 		panic(err)
 	}
 	fmt.Println(ba.ID)
-
-	// Fetch bank account
-	ba, err := client.Accounts().Fetch(context.Background(), "08e96610-d4ed-4de2-9a18-fcb3017b452c")
-
-	// Delete bank account
-	err := client.Accounts().Delete(context.Background(), "08e96610-d4ed-4de2-9a18-fcb3017b452c", 2)
 }
