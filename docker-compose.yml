@@ -39,6 +39,7 @@ services:
     image: golang:1.19.3-alpine3.16
     depends_on:
       - accountapi
+    restart: "always"
     environment:
       - FORM3_API_BASE_URL=http://accountapi:8080
       - CGO_ENABLED=0
