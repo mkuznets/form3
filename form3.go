@@ -1,8 +1,9 @@
 package form3
 
 import (
-	"mkuznets.com/go/form3/accounts"
-	"mkuznets.com/go/form3/api"
+	"net/http"
+
+	"github.com/google/uuid"
 )
 
 const (
@@ -11,47 +12,42 @@ const (
 
 // Client is the Form3 API client.
 type Client struct {
-	Api *api.Api
+	api Api
 	// Accounts is the Form3 API client for /v1/organisation/accounts endpoints.
-	Accounts *accounts.Client
+	accounts AccountsClient
 
-	baseUrl        string
-	organisationId string
+	// uuidProvider returns unique UUIDv4 identifiers used as ID of new Form3 API resources.
+	uuidProvider func() string
+	// httpClient is an instance of http.Client used for API requests.
+	httpClient *http.Client
+	// backOffProvider returns a fresh BackOff instance that governs API endpoint retry policy.
+	backOffProvider func() BackOff
+	baseUrl         string
+	organisationId  string
 }
 
-func New(opts ...Option) (*Client, error) {
-	s := &Client{
+func (c *Client) Api() Api {
+	return c.api
+}
+
+func (c *Client) Accounts() AccountsClient {
+	return c.accounts
+}
+
+func New() *Client {
+	client := &Client{
 		baseUrl: DefaultBaseUrl,
-	}
-	for _, opt := range opts {
-		opt(s)
-	}
-
-	if s.Api == nil {
-		c, err := api.New(s.baseUrl, s.organisationId)
-		if err != nil {
-			return nil, err
-		}
-		s.Api = c
+		uuidProvider: func() string {
+			return uuid.NewString()
+		},
+		backOffProvider: DefaultBackOffProvider,
+		httpClient:      &http.Client{},
 	}
 
-	s.Accounts = &accounts.Client{A: s.Api}
+	client.api = &api{c: client}
+	client.accounts = &accountsClient{c: client}
 
-	return s, nil
-}
-
-type Option = func(service *Client)
-
-func WithBaseUrl(v string) Option {
-	return func(f *Client) {
-		f.baseUrl = v
-	}
-}
-
-func WithOrganisationId(v string) Option {
-	return func(f *Client) {
-		f.organisationId = v
-	}
+	return client
 }
 
 func String(v string) *string {

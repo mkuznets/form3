@@ -1,4 +1,4 @@
-package api_test
+package form3_test
 
 import (
 	"context"
@@ -8,24 +8,27 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"mkuznets.com/go/form3/api"
+	"mkuznets.com/go/form3"
 	"mkuznets.com/go/form3/internal/testutils"
 )
 
-func TestApi_New(t *testing.T) {
-	t.Run("success", func(t *testing.T) {
-		a, err := api.New("https://api.form3.tech", "org-id")
-		assert.NoError(t, err)
-		assert.Equal(t, "https://api.form3.tech", a.BaseUrl.String())
-		assert.Equal(t, "org-id", a.OrganisationId)
-	})
-	t.Run("url error", func(t *testing.T) {
-		_, err := api.New("__:__", "org-id")
-		assert.Error(t, err)
-	})
+func testBackOff(maxRetries int) func() form3.BackOff {
+	return func() form3.BackOff {
+		return testutils.NewTestBackOff(maxRetries)
+	}
 }
 
 func TestApi_Do(t *testing.T) {
+
+	t.Run("base URL error", func(t *testing.T) {
+		api := form3.New().SetBaseUrl("__:__").Api()
+		err := api.Do(context.Background(), &form3.Call{
+			Method: "GET",
+			Path:   "/v1/resource",
+		})
+		assert.ErrorContains(t, err, "first path segment in URL cannot contain colon")
+	})
+
 	t.Run("GET", func(t *testing.T) {
 		mux := http.NewServeMux()
 		mux.HandleFunc("/v1/resource", func(w http.ResponseWriter, r *http.Request) {
@@ -35,8 +38,9 @@ func TestApi_Do(t *testing.T) {
 		ts := httptest.NewServer(mux)
 		defer ts.Close()
 
-		a, _ := api.New(ts.URL, "org-id")
-		err := a.Do(context.Background(), &api.Call{
+		api := form3.New().SetBaseUrl(ts.URL).Api()
+
+		err := api.Do(context.Background(), &form3.Call{
 			Method: "GET",
 			Path:   "/v1/resource",
 		})
@@ -53,14 +57,13 @@ func TestApi_Do(t *testing.T) {
 		ts := httptest.NewServer(mux)
 		defer ts.Close()
 
-		a, _ := api.New(ts.URL, "org-id")
-		a.BackOffProvider = func() api.BackOff { return testutils.NewMaxRetriesBackOff(0) }
+		api := form3.New().SetBaseUrl(ts.URL).SetBackOffProvider(testBackOff(0)).Api()
 
 		var response struct {
 			Id string `json:"id"`
 		}
 
-		err := a.Do(context.Background(), &api.Call{
+		err := api.Do(context.Background(), &form3.Call{
 			Method:   "GET",
 			Path:     "/v1/resource",
 			Response: &response,
@@ -85,8 +88,9 @@ func TestApi_Do(t *testing.T) {
 			Id string `json:"id"`
 		}
 
-		a, _ := api.New(ts.URL, "org-id")
-		err := a.Do(context.Background(), &api.Call{
+		api := form3.New().SetBaseUrl(ts.URL).Api()
+
+		err := api.Do(context.Background(), &form3.Call{
 			Method:   "POST",
 			Path:     "/v1/resource",
 			Response: &response,
@@ -113,8 +117,8 @@ func TestApi_Do(t *testing.T) {
 			Id string `json:"id"`
 		}{Id: "123"}
 
-		a, _ := api.New(ts.URL, "org-id")
-		err := a.Do(context.Background(), &api.Call{
+		api := form3.New().SetBaseUrl(ts.URL).Api()
+		err := api.Do(context.Background(), &form3.Call{
 			Method:  "POST",
 			Path:    "/v1/resource",
 			Request: request,
@@ -146,11 +150,9 @@ func TestApi_DoRetry(t *testing.T) {
 		ts := httptest.NewServer(handlerMock)
 		defer ts.Close()
 
-		a, _ := api.New(ts.URL, "org-id")
-		a.BackOffProvider = func() api.BackOff {
-			return testutils.NewMaxRetriesBackOff(10)
-		}
-		err := a.Do(context.Background(), &api.Call{Method: "POST", Path: "/v1/resource"})
+		api := form3.New().SetBaseUrl(ts.URL).SetBackOffProvider(testBackOff(10)).Api()
+
+		err := api.Do(context.Background(), &form3.Call{Method: "POST", Path: "/v1/resource"})
 		assert.NoError(t, err)
 		assert.Equal(t, 4, len(handlerMock.ServeHTTPCalls()))
 	})
@@ -160,11 +162,9 @@ func TestApi_DoRetry(t *testing.T) {
 		ts := httptest.NewServer(handlerMock)
 		defer ts.Close()
 
-		a, _ := api.New(ts.URL, "org-id")
-		a.BackOffProvider = func() api.BackOff {
-			return testutils.NewMaxRetriesBackOff(2)
-		}
-		err := a.Do(context.Background(), &api.Call{Method: "POST", Path: "/v1/resource"})
+		api := form3.New().SetBaseUrl(ts.URL).SetBackOffProvider(testBackOff(2)).Api()
+
+		err := api.Do(context.Background(), &form3.Call{Method: "POST", Path: "/v1/resource"})
 		assert.ErrorContains(t, err, "HTTP 500: API error message")
 		assert.Equal(t, 3, len(handlerMock.ServeHTTPCalls()))
 	})
@@ -180,12 +180,9 @@ func TestApi_DoRetry(t *testing.T) {
 		ts = httptest.NewServer(handlerMock)
 		defer ts.Close()
 
-		a, _ := api.New(ts.URL, "org-id")
-		a.BackOffProvider = func() api.BackOff {
-			return testutils.NewMaxRetriesBackOff(2)
-		}
+		api := form3.New().SetBaseUrl(ts.URL).SetBackOffProvider(testBackOff(2)).Api()
 
-		err := a.Do(context.Background(), &api.Call{Method: "POST", Path: "/v1/resource"})
+		err := api.Do(context.Background(), &form3.Call{Method: "POST", Path: "/v1/resource"})
 		assert.ErrorContains(t, err, "EOF")
 		assert.Equal(t, 3, len(handlerMock.ServeHTTPCalls()))
 	})
@@ -195,11 +192,8 @@ func TestApi_DoRetry(t *testing.T) {
 		ts := httptest.NewServer(handlerMock)
 		defer ts.Close()
 
-		a, _ := api.New(ts.URL, "org-id")
-		a.BackOffProvider = func() api.BackOff {
-			return testutils.NewMaxRetriesBackOff(10)
-		}
-		err := a.Do(context.Background(), &api.Call{Method: "POST", Path: "/v1/resource"})
+		api := form3.New().SetBaseUrl(ts.URL).SetBackOffProvider(testBackOff(2)).Api()
+		err := api.Do(context.Background(), &form3.Call{Method: "POST", Path: "/v1/resource"})
 		assert.ErrorContains(t, err, "HTTP 400: API error message")
 		assert.Equal(t, 1, len(handlerMock.ServeHTTPCalls()))
 	})

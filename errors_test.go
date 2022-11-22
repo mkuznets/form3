@@ -1,41 +1,41 @@
-package api_test
+package form3_test
 
 import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"mkuznets.com/go/form3/api"
+	"mkuznets.com/go/form3"
 )
 
 func TestError_Error(t *testing.T) {
 	tests := []struct {
 		name string
-		err  api.Error
+		err  form3.Error
 		want string
 	}{
 		{
 			name: "empty",
-			err:  api.Error{},
+			err:  form3.Error{},
 			want: "Unrecognised error",
 		},
 		{
 			name: "status_code",
-			err:  api.Error{StatusCode: 404},
+			err:  form3.Error{StatusCode: 404},
 			want: "HTTP 404: Not Found",
 		},
 		{
 			name: "error_code_error_message",
-			err:  api.Error{StatusCode: 400, ResponseErrorCode: "bad_request", ResponseErrorMessage: "Message parsing failed"},
+			err:  form3.Error{StatusCode: 400, ResponseErrorCode: "bad_request", ResponseErrorMessage: "Message parsing failed"},
 			want: "bad_request: Message parsing failed",
 		},
 		{
 			name: "error_message",
-			err:  api.Error{StatusCode: 400, ResponseErrorMessage: "Message parsing failed"},
+			err:  form3.Error{StatusCode: 400, ResponseErrorMessage: "Message parsing failed"},
 			want: "HTTP 400: Message parsing failed",
 		},
 		{
 			name: "error_error_description",
-			err:  api.Error{StatusCode: 401, ResponseError: "invalid_grant", ResponseErrorDescription: "Wrong email or password"},
+			err:  form3.Error{StatusCode: 401, ResponseError: "invalid_grant", ResponseErrorDescription: "Wrong email or password"},
 			want: "invalid_grant: Wrong email or password",
 		},
 	}
@@ -49,48 +49,48 @@ func TestError_Error(t *testing.T) {
 func TestError_Type(t *testing.T) {
 	tests := []struct {
 		name string
-		err  api.Error
-		want api.ErrorType
+		err  form3.Error
+		want form3.ErrorType
 	}{
 		{
 			name: "bad request",
-			err:  api.Error{StatusCode: 400},
-			want: api.ErrorClientError,
+			err:  form3.Error{StatusCode: 400},
+			want: form3.ErrorClientError,
 		},
 		{
 			name: "not found",
-			err:  api.Error{StatusCode: 404},
-			want: api.ErrorClientError,
+			err:  form3.Error{StatusCode: 404},
+			want: form3.ErrorClientError,
 		},
 		{
 			name: "forbidden",
-			err:  api.Error{StatusCode: 403},
-			want: api.ErrorClientError,
+			err:  form3.Error{StatusCode: 403},
+			want: form3.ErrorClientError,
 		},
 		{
 			name: "conflict",
-			err:  api.Error{StatusCode: 409},
-			want: api.ErrorConflict,
+			err:  form3.Error{StatusCode: 409},
+			want: form3.ErrorConflict,
 		},
 		{
 			name: "too many requests",
-			err:  api.Error{StatusCode: 429},
-			want: api.ErrorTooManyRequests,
+			err:  form3.Error{StatusCode: 429},
+			want: form3.ErrorTooManyRequests,
 		},
 		{
 			name: "internal server error",
-			err:  api.Error{StatusCode: 500},
-			want: api.ErrorServerError,
+			err:  form3.Error{StatusCode: 500},
+			want: form3.ErrorServerError,
 		},
 		{
 			name: "gateway timeout",
-			err:  api.Error{StatusCode: 502},
-			want: api.ErrorServerError,
+			err:  form3.Error{StatusCode: 502},
+			want: form3.ErrorServerError,
 		},
 		{
 			name: "moved permanently",
-			err:  api.Error{StatusCode: 301},
-			want: api.ErrorUnknown,
+			err:  form3.Error{StatusCode: 301},
+			want: form3.ErrorUnknown,
 		},
 	}
 	for _, tt := range tests {

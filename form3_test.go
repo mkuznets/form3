@@ -19,20 +19,16 @@ func SetupIntegration(t *testing.T) {
 func TestIntegrationService(t *testing.T) {
 	SetupIntegration(t)
 
-	srv, err := form3.New(
-		form3.WithOrganisationId(uuid.New().String()),
-		form3.WithBaseUrl("http://127.0.0.1:8080"))
+	v := uuid.NewString()
 
-	v := uuid.New().String()
-	srv.Api.UuidProvider = func() string {
-		return v
-	}
+	srv := form3.New().
+		SetOrganisationId(uuid.NewString()).
+		SetBaseUrl("http://127.0.0.1:8080").
+		SetUuidProvider(func() string {
+			return v
+		})
 
-	if err != nil {
-		panic(err)
-	}
-
-	r, err := srv.Accounts.Create(context.Background(), &models.AccountAttributes{
+	r, err := srv.Accounts().Create(context.Background(), &models.AccountAttributes{
 		AccountNumber: "21751823",
 		BankID:        "200401",
 		BankIDCode:    models.BankIDCodeGB,
@@ -47,9 +43,9 @@ func TestIntegrationService(t *testing.T) {
 	}
 	fmt.Println(r)
 
-	srv.Api.OrganisationId = uuid.New().String()
+	srv.SetOrganisationId(uuid.NewString())
 
-	r, err = srv.Accounts.Create(context.Background(), &models.AccountAttributes{
+	r, err = srv.Accounts().Create(context.Background(), &models.AccountAttributes{
 		AccountNumber: "21751823",
 		BankID:        "200401",
 		BankIDCode:    models.BankIDCodeGB,

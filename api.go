@@ -1,4 +1,4 @@
-package api
+package form3
 
 import (
 	"context"
@@ -9,49 +9,31 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/google/uuid"
 	"mkuznets.com/go/form3/models"
 )
 
 // Api manages requests and responses from the Form3 API endpoints.
-type Api struct {
-	// BaseUrl is the parsed base URL of the Form3 API.
-	BaseUrl *url.URL
-	// HttpClient is an instance of http.Client used for API requests.
-	HttpClient *http.Client
-	// BackOffProvider returns a fresh BackOff instance that governs API endpoint retry policy.
-	BackOffProvider func() BackOff
-	// UuidProvider returns unique UUIDv4 identifiers used as ID of new Form3 API resources.
-	UuidProvider func() string
-	// OrganisationId is the organisation ID used in the Form3 API requests.
-	OrganisationId string
+type Api interface {
+	Do(ctx context.Context, call *Call) error
 }
 
-// New create a new Form3 api with the given base URL.
-func New(baseUrl string, organisationId string) (*Api, error) {
-	u, err := url.Parse(baseUrl)
-	if err != nil {
-		return nil, err
-	}
-	return &Api{
-		BaseUrl:         u,
-		HttpClient:      &http.Client{},
-		BackOffProvider: DefaultBackOffProvider,
-		UuidProvider: func() string {
-			return uuid.New().String()
-		},
-		OrganisationId: organisationId,
-	}, nil
+type api struct {
+	c *Client
 }
 
-func (s *Api) Do(ctx context.Context, call *Call) error {
-	request, err := call.httpRequest(ctx, s.BaseUrl)
+func (a *api) Do(ctx context.Context, call *Call) error {
+	baseUrl, err := url.Parse(a.c.baseUrl)
 	if err != nil {
 		return err
 	}
 
-	resp, err := s.withRetries(func() (*http.Response, error) {
-		resp, errC := s.HttpClient.Do(request)
+	request, err := call.httpRequest(ctx, baseUrl)
+	if err != nil {
+		return err
+	}
+
+	resp, err := a.withRetries(func() (*http.Response, error) {
+		resp, errC := a.c.httpClient.Do(request)
 		if errC != nil {
 			return nil, errC
 		}
@@ -73,8 +55,8 @@ func (s *Api) Do(ctx context.Context, call *Call) error {
 	return nil
 }
 
-func (s *Api) withRetries(handler func() (*http.Response, error)) (*http.Response, error) {
-	backOff := s.BackOffProvider()
+func (a *api) withRetries(handler func() (*http.Response, error)) (*http.Response, error) {
+	backOff := a.c.backOffProvider()
 	if backOff == nil {
 		return nil, errors.New("backoff provider returned nil")
 	}
@@ -124,6 +106,8 @@ func shouldRetry(err error) bool {
 }
 
 func drainBody(resp *http.Response) {
-	defer resp.Body.Close()
+	defer func(Body io.ReadCloser) {
+		_ = Body.Close()
+	}(resp.Body)
 	_, _ = io.Copy(io.Discard, resp.Body)
 }
