@@ -10,13 +10,18 @@ import (
 	"mkuznets.com/go/form3/models"
 )
 
-// Call represents a single Form3 API endpoint invocation and its response.
+// Call represents a single Form3 API endpoint invocation and an optional structure to store the response.
 type Call struct {
-	Method      string
-	Path        string
+	// Method is the HTTP method to use for the request.
+	Method string
+	// Path is the path to the endpoint, relative to the base URL.
+	Path string
+	// QueryParams is a map of query parameters to add to the request.
 	QueryParams url.Values
-	Request     any
-	Response    any
+	// Request is the JSON-serialisable struct to send as the request body. Should be nil for endpoints without JSON request body.
+	Request any
+	// Response is an optional pointer to a struct to unmarshal the response body into. Should be nil for endpoints without JSON response.
+	Response any
 }
 
 func (c *Call) body() ([]byte, error) {

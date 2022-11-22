@@ -5,6 +5,7 @@ import (
 	"net/http"
 )
 
+// ErrorType is an enumeration of possible API error types.
 type ErrorType int
 
 const (
@@ -15,19 +16,21 @@ const (
 	ErrorUnknown
 )
 
+// Error represents a Form3 API error.
 type Error struct {
 	StatusCode int
 	RawBody    []byte
 
-	// HTTP 400/409
+	// Returned with HTTP 400/409
 	ResponseErrorMessage string `json:"error_message"`
 	ResponseErrorCode    string `json:"error_code"`
 
-	// HTTP 403
+	// Returned with HTTP 403
 	ResponseError            string `json:"error"`
 	ResponseErrorDescription string `json:"error_description"`
 }
 
+// Type returns the ErrorType of the error.
 func (e Error) Type() ErrorType {
 	switch {
 	case e.StatusCode == http.StatusTooManyRequests:
@@ -65,6 +68,7 @@ func (e Error) message() string {
 	return "Unrecognised error"
 }
 
+// Error returns a string representation of the error in the form of "[<code>: ]<message>".
 func (e Error) Error() string {
 	code := e.code()
 	msg := e.message()

@@ -13,8 +13,9 @@ import (
 	"mkuznets.com/go/form3/models"
 )
 
-// Api manages requests and responses from the Form3 API endpoints.
+// Api a is low-level Form3 API client to access arbitrary endpoints. Most users should use specialised clients (such as AccountsClient) instead.
 type Api interface {
+	// Do performs a Form3 API call according to the values provided in Call.
 	Do(ctx context.Context, call *Call) error
 }
 

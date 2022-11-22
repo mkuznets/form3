@@ -9,13 +9,16 @@ import (
 	"mkuznets.com/go/form3/models"
 )
 
+// AccountsClient is the Form3 API client for /v1/organisation/accounts endpoints.
 type AccountsClient interface {
+	// Create a new bank account or register an existing bank account with Form3
 	Create(ctx context.Context, attributes *models.AccountAttributes) (*models.AccountResource, error)
+	// Fetch a single Account resource using the resource ID.
 	Fetch(ctx context.Context, id string) (*models.AccountResource, error)
+	// Delete an Account resource using the resource ID and the current version number.
 	Delete(ctx context.Context, id string, version int) error
 }
 
-// accountsClient is the Form3 API client for /v1/organisation/accounts endpoints.
 type accountsClient struct {
 	c *Client
 }
@@ -51,11 +54,11 @@ func (s *accountsClient) Create(ctx context.Context, attributes *models.AccountA
 	return nil, err
 }
 
-func (s *accountsClient) Fetch(ctx context.Context, accountId string) (*models.AccountResource, error) {
+func (s *accountsClient) Fetch(ctx context.Context, id string) (*models.AccountResource, error) {
 	response := &models.AccountResource{}
 	call := &Call{
 		Method:   "GET",
-		Path:     fmt.Sprintf("/v1/organisation/accounts/%s", accountId),
+		Path:     fmt.Sprintf("/v1/organisation/accounts/%s", id),
 		Response: response,
 	}
 	if err := s.c.Api().Do(ctx, call); err != nil {
@@ -64,10 +67,10 @@ func (s *accountsClient) Fetch(ctx context.Context, accountId string) (*models.A
 	return response, nil
 }
 
-func (s *accountsClient) Delete(ctx context.Context, accountId string, accountVersion int) error {
+func (s *accountsClient) Delete(ctx context.Context, id string, accountVersion int) error {
 	call := &Call{
 		Method:      "DELETE",
-		Path:        fmt.Sprintf("/v1/organisation/accounts/%s", accountId),
+		Path:        fmt.Sprintf("/v1/organisation/accounts/%s", id),
 		QueryParams: url.Values{},
 	}
 	call.QueryParams.Add("version", strconv.Itoa(accountVersion))
