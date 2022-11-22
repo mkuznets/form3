@@ -1,3 +1,5 @@
+> Candidate: Max Kuznetsov
+
 # form3 is a Form3 API client for Go.
 
 This is an unofficial Golang client for the [Form3 API](https://www.api-docs.form3.tech/).
